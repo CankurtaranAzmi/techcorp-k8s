@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TechCorp - Kurumsal Çözümler{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">Tech<span>Corp</span></a>
+            <ul class="nav-links">
+                <li><a href="/" {% if request.path == '/' %}class="active"{% endif %}>Ana Sayfa</a></li>
+                <li><a href="/hakkimizda" {% if request.path == '/hakkimizda' %}class="active"{% endif %}>Hakkımızda</a></li>
+                <li><a href="/hizmetler" {% if request.path == '/hizmetler' %}class="active"{% endif %}>Hizmetler</a></li>
+                <li><a href="/iletisim" {% if request.path == '/iletisim' %}class="active"{% endif %}>İletişim</a></li>
+            </ul>
+        </div>
+    </nav>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">
+        <div class="footer-container">
+            <p>© 2025 TechCorp. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+</body>
+</html>

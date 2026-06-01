@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}TechCorp - Hizmetler{% endblock %}
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1>Hizmetlerimiz</h1>
+        <p>İşletmenize özel teknoloji çözümleri.</p>
+    </div>
+</section>
+
+<section class="services-content">
+    <div class="container">
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">☁️</div>
+                <h3>Bulut Altyapısı</h3>
+                <p>Google Cloud, AWS ve Azure üzerinde ölçeklenebilir altyapı kurulumu ve yönetimi.</p>
+                <ul>
+                    <li>Kubernetes cluster yönetimi</li>
+                    <li>Container orchestration</li>
+                    <li>Auto-scaling çözümleri</li>
+                </ul>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🔄</div>
+                <h3>CI/CD Pipeline</h3>
+                <p>Sürekli entegrasyon ve dağıtım süreçlerinizi otomatikleştirin.</p>
+                <ul>
+                    <li>GitHub Actions entegrasyonu</li>
+                    <li>Cloud Build pipeline</li>
+                    <li>Otomatik test ve deploy</li>
+                </ul>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🛡️</div>
+                <h3>Güvenlik & Monitoring</h3>
+                <p>Altyapınızı 7/24 izleyin ve güvende tutun.</p>
+                <ul>
+                    <li>Network policy yönetimi</li>
+                    <li>Log analizi</li>
+                    <li>Güvenlik denetimleri</li>
+                </ul>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">💾</div>
+                <h3>Veri Yönetimi</h3>
+                <p>Kalıcı depolama ve veri yedekleme çözümleri.</p>
+                <ul>
+                    <li>Persistent Volume yönetimi</li>
+                    <li>Veritabanı optimizasyonu</li>
+                    <li>Yedekleme stratejileri</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

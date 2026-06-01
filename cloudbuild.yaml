@@ -1,0 +1,48 @@
+steps:
+  # Adım 1: Docker image build
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/techcorp:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/techcorp:latest'
+      - '.'
+
+  # Adım 2: Image'ı Google Container Registry'e push et
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/techcorp:$COMMIT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/techcorp:latest'
+
+  # Adım 3: GKE cluster'a bağlan
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    args:
+      - 'run'
+      - '--filename=k8s/'
+      - '--image=gcr.io/$PROJECT_ID/techcorp:$COMMIT_SHA'
+      - '--location=europe-west1'
+      - '--cluster=techcorp-cluster'
+
+  # Adım 4: Deployment image'ını güncelle (rolling update)
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'set'
+      - 'image'
+      - 'deployment/techcorp-deployment'
+      - 'techcorp=gcr.io/$PROJECT_ID/techcorp:$COMMIT_SHA'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=europe-west1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=techcorp-cluster'
+
+images:
+  - 'gcr.io/$PROJECT_ID/techcorp:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/techcorp:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

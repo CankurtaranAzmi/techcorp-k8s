@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}TechCorp - Ana Sayfa{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1>Geleceği Birlikte <span class="accent">İnşa Ediyoruz</span></h1>
+        <p>Kurumsal dijital dönüşüm sürecinizde güvenilir teknoloji ortağınız.</p>
+        <a href="/hizmetler" class="btn-primary">Hizmetlerimizi Keşfedin</a>
+    </div>
+</section>
+
+<section class="features">
+    <div class="container">
+        <h2 class="section-title">Neden TechCorp?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">☁️</div>
+                <h3>Bulut Çözümleri</h3>
+                <p>Kubernetes ve Docker ile ölçeklenebilir, güvenli altyapı çözümleri sunuyoruz.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Güvenlik</h3>
+                <p>Verilerinizi en yüksek güvenlik standartlarıyla koruyoruz.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Yüksek Performans</h3>
+                <p>7/24 kesintisiz hizmet ve yüksek erişilebilirlik garantisi.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number">500+</span>
+                <span class="stat-label">Mutlu Müşteri</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">99.9%</span>
+                <span class="stat-label">Uptime Garantisi</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">10+</span>
+                <span class="stat-label">Yıl Deneyim</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">50+</span>
+                <span class="stat-label">Uzman Ekip</span>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

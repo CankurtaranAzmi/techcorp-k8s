@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}TechCorp - İletişim{% endblock %}
+{% block content %}
+<section class="page-hero">
+    <div class="container">
+        <h1>İletişim</h1>
+        <p>Sizinle tanışmak isteriz.</p>
+    </div>
+</section>
+
+<section class="contact-content">
+    <div class="container">
+        <div class="contact-grid">
+            <div class="contact-info">
+                <h2>Bize Ulaşın</h2>
+                <div class="contact-item">
+                    <span class="contact-icon">📍</span>
+                    <div>
+                        <strong>Adres</strong>
+                        <p>Teknokent, No:42<br>Konya, Türkiye</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">📧</span>
+                    <div>
+                        <strong>E-posta</strong>
+                        <p>info@techcorp.com.tr</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">📞</span>
+                    <div>
+                        <strong>Telefon</strong>
+                        <p>+90 332 555 0100</p>
+                    </div>
+                </div>
+            </div>
+            <div class="contact-form-wrapper">
+                <h2>Mesaj Gönderin</h2>
+                <form class="contact-form" action="#" method="post">
+                    <input type="text" name="name" placeholder="Adınız Soyadınız" required>
+                    <input type="email" name="email" placeholder="E-posta Adresiniz" required>
+                    <input type="text" name="subject" placeholder="Konu">
+                    <textarea name="message" placeholder="Mesajınız..." rows="5" required></textarea>
+                    <button type="submit" class="btn-primary">Gönder</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
