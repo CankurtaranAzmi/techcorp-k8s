@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: techcorp
-        image: gcr.io/YOUR_PROJECT_ID/techcorp:latest
+        image: gcr.io/my-docker-project-491221/techcorp:latest
         ports:
         - containerPort: 5000
         env:
@@ -48,10 +48,3 @@ spec:
             port: 5000
           initialDelaySeconds: 15
           periodSeconds: 20
-        volumeMounts:
-        - name: techcorp-storage
-          mountPath: /app/data
-      volumes:
-      - name: techcorp-storage
-        persistentVolumeClaim:
-          claimName: techcorp-pvc

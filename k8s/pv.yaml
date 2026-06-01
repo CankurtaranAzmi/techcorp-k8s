@@ -11,5 +11,6 @@ spec:
     storage: 1Gi
   accessModes:
     - ReadWriteOnce
-  hostPath:
-    path: "/mnt/data/techcorp"
+  gcePersistentDisk:
+    pdName: techcorp-disk
+    fsType: ext4
