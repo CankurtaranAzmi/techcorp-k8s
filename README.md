@@ -6,7 +6,8 @@
 
 ## 👥 Proje Ekibi
 * **Kaan Kuzucanlı** (23010310051)
-* **Azmi Cankurtaran** (Öğrenci Numarasını Giriniz)
+* **Azmi Cankurtaran** (23640310034)
+* **Ahmet Nihat Karkaç** (23010310045)
 
 ---
 
