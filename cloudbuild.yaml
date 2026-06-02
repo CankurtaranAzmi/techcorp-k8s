@@ -1,5 +1,4 @@
 steps:
-  # Adım 1: Docker image build
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
@@ -9,7 +8,6 @@ steps:
       - 'gcr.io/$PROJECT_ID/techcorp:latest'
       - '.'
 
-  # Adım 2: Image'ı Google Container Registry'e push et
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
@@ -20,7 +18,6 @@ steps:
       - 'push'
       - 'gcr.io/$PROJECT_ID/techcorp:latest'
 
-  # Adım 3: GKE cluster'a bağlan
   - name: 'gcr.io/cloud-builders/gke-deploy'
     args:
       - 'run'
@@ -29,7 +26,6 @@ steps:
       - '--location=europe-west1'
       - '--cluster=techcorp-cluster'
 
-  # Adım 4: Deployment image'ını güncelle (rolling update)
   - name: 'gcr.io/cloud-builders/kubectl'
     args:
       - 'set'
