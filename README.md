@@ -1,263 +1,124 @@
-# TechCorp - Kurumsal Web Uygulaması
+# TechCorp - Kurumsal Web Uygulaması ve Bulut Mimarisi Raporu
 
-> Flask tabanlı kurumsal web sitesi — Docker, Kubernetes (GKE) ve Cloud Build CI/CD ile deploy edilmiştir.
+> **Bartın Üniversitesi - Bilgisayar Mühendisliği**
+> **Bulut Bilişim Dersi Dönem Sonu Projesi**
+> **Sunum Tarihi:** 3 Haziran 2026
 
----
-
-## 📁 Proje Yapısı
-
-```
-corporate-site/
-├── app/
-│   ├── app.py                  # Flask uygulaması
-│   ├── requirements.txt        # Python bağımlılıkları
-│   ├── templates/              # HTML şablonları
-│   │   ├── base.html
-│   │   ├── index.html
-│   │   ├── hakkimizda.html
-│   │   ├── hizmetler.html
-│   │   └── iletisim.html
-│   └── static/
-│       └── css/
-│           └── style.css
-├── k8s/
-│   ├── deployment.yaml         # Kubernetes Deployment
-│   ├── service.yaml            # Kubernetes Service (LoadBalancer)
-│   ├── pv.yaml                 # Persistent Volume
-│   ├── pvc.yaml                # Persistent Volume Claim
-│   ├── networkpolicy.yaml      # Network Policy
-│   └── hpa.yaml                # Horizontal Pod Autoscaler
-├── Dockerfile                  # Docker image tanımı
-├── cloudbuild.yaml             # CI/CD pipeline (Cloud Build)
-└── README.md
-```
+## 👥 Proje Ekibi
+* **Kaan Kuzucanlı** (23010310051)
+* **Azmi Cankurtaran** (Öğrenci Numarasını Giriniz)
 
 ---
 
-## 🏗️ Uygulama Mimarisi
+## 🏗️ 1. Proje ve Sistem Mimarisi
 
-```
-Kullanıcı → LoadBalancer Service (port 80)
-              ↓
-         Kubernetes Pod (Flask app, port 5000)
-              ↓
-         Persistent Volume (uygulama verisi)
-```
+TechCorp, modern bulut mimarisi standartlarına uygun, yüke göre kendi kendini ölçekleyebilen (Auto-scaling) ve sürekli entegrasyon/sürekli dağıtım (CI/CD) süreçlerine sahip bir yapı olarak tasarlanmıştır.
 
-- **Frontend:** HTML/CSS (Jinja2 template engine)
-- **Backend:** Python Flask + Gunicorn (2 worker)
-- **Container:** Docker (python:3.11-slim base image)
-- **Servis:** 4 sayfa — Ana Sayfa, Hakkımızda, Hizmetler, İletişim
+* **Frontend & Backend (Monolitik Mikroservis):** Kullanıcı arayüzü Jinja2 şablon motoru ve HTML/CSS ile hazırlanmış, backend tarafında ise Python Flask kullanılmıştır. Gunicorn, WSGI sunucusu olarak kullanılarak (2 worker) eşzamanlı HTTP istekleri optimize edilmiştir.
+* **Konteynerizasyon:** Uygulama, imaj boyutunu küçük tutmak ve güvenlik açıklarını minimize etmek amacıyla `python:3.11-slim` baz imajı kullanılarak Dockerize edilmiştir.
+* **Orkestrasyon:** Konteynerlerin yönetimi, yük dağıtımı (Load Balancing) ve sağlık kontrolleri (Health Checks) için Google Kubernetes Engine (GKE) tercih edilmiştir.
 
----
+### Trafik ve Veri Akışı (Traffic Flow)
+Dışarıdan gelen bir web isteğinin sistem içindeki yolculuğu aşağıdaki gibidir:
 
-## ☸️ Kubernetes Mimarisi
-
-```
-GKE Cluster
-├── Deployment (techcorp-deployment)
-│   ├── Pod 1 (techcorp container)
-│   ├── Pod 2 (techcorp container)
-│   └── Pod 3 (techcorp container)
-├── Service (techcorp-service) → LoadBalancer
-├── HorizontalPodAutoscaler (min:2, max:5)
-├── PersistentVolume (1Gi)
-├── PersistentVolumeClaim (1Gi)
-└── NetworkPolicy (ingress/egress kuralları)
-```
+    [ İnternet / Kullanıcı ] 
+               │
+               ▼
+    [ LoadBalancer Service ] (Gelen trafiği K8s cluster'ına alır ve dengeler - Port 80)
+               │
+               ├─────────► [ Pod 1 ] (Flask App - Port 5000)
+               ├─────────► [ Pod 2 ] (Flask App - Port 5000)
+               └─────────► [ Pod 3 ] (Flask App - Port 5000)
+                             │
+                             ▼
+                     [ Persistent Volume ] (Kalıcı uygulama verisi - /app/data)
 
 ---
 
-## 🔄 CI/CD Pipeline Akışı
+## ☸️ 2. Kubernetes (K8s) Kaynakları ve Mimari Kararlar
 
-```
-GitHub Push
-    ↓
-Cloud Build Tetiklenir
-    ↓
-1. Docker image build (gcr.io/$PROJECT_ID/techcorp:$COMMIT_SHA)
-    ↓
-2. Image → Google Container Registry'e push
-    ↓
-3. GKE cluster'a bağlan
-    ↓
-4. kubectl set image → Rolling Update başlar
-    ↓
-Yeni Pod'lar ayağa kalkar → Eski Pod'lar kaldırılır
-```
+Projemizde sistemin sürekliliğini, güvenliğini ve performansını garanti altına almak için çeşitli Kubernetes objeleri kullanılmıştır. Her bir bileşen, belirli bir bulut mimarisi problemini çözmek üzere özel olarak yapılandırılmıştır. `k8s/` dizini altında bulunan manifest dosyalarının işlevleri ve tercih nedenleri aşağıda detaylandırılmıştır:
 
----
+### 2.1. Yüksek Erişilebilirlik ve Durum Yönetimi (Deployment)
+**Dosya:** `deployment.yaml`
+**Kapsam:** Uygulamanın GKE üzerinde nasıl çalıştırılacağını tanımlar. 
+**Mimari Karar:** Kapsayıcılar (Containers) doğası gereği geçicidir. Deployment objesi sayesinde sistemin "İstenen Durumu (Desired State)" tanımlanmıştır. Herhangi bir Pod donanım arızası veya yazılımsal bir hata sebebiyle çökerse, Kubernetes'in kontrol döngüsü bunu fark eder ve anında yeni bir Pod ayağa kaldırır (Self-healing). Ayrıca güncellemeler sırasında "Rolling Update" stratejisi kullanılarak kesintisiz geçiş (Zero-downtime) sağlanır.
 
-## 🚀 Kurulum ve Çalıştırma
+### 2.2. Dış Trafik Yönetimi (Service & LoadBalancer)
+**Dosya:** `service.yaml`
+**Kapsam:** İnternetten gelen kullanıcı isteklerini karşılar ve arkadaki Pod'lara dağıtır.
+**Mimari Karar:** Cluster dışından uygulamaya erişim sağlamak için `LoadBalancer` tipinde bir servis kullanılmıştır. Dışarıdan gelen HTTP (Port 80) trafiği, sistem tarafından otomatik olarak Pod'ların dinlediği Port 5000'e yönlendirilir. Bu sayede trafik tek bir noktaya yığılmaz, aktif Pod'lar arasında dengeli bir şekilde paylaştırılır.
 
-### Gereksinimler
-- Google Cloud hesabı
-- `gcloud` CLI kurulu
-- `kubectl` kurulu
-- Docker kurulu
+### 2.3. Dinamik Kaynak Yönetimi ve Ölçeklendirme (HPA)
+**Dosya:** `hpa.yaml` (Horizontal Pod Autoscaler)
+**Kapsam:** Sisteme gelen yüke göre Pod sayısını otomatik olarak artırır veya azaltır.
+**Mimari Karar:** "Kullandığın kadar öde" prensibini ve performans optimizasyonunu sağlamak için HPA yapılandırılmıştır. Ortalama CPU kullanımı %70'i veya Bellek (RAM) kullanımı %80'i aştığında tetiklenir. Sistem boştayken minimum 2 Pod çalışır, yük altındayken maksimum 5 Pod'a kadar otomatik ölçeklenir.
 
-### 1. GKE Cluster Oluşturma
+### 2.4. Ağ Güvenliği ve İzolasyon (NetworkPolicy)
+**Dosya:** `networkpolicy.yaml`
+**Kapsam:** Pod'ların ağ üzerindeki iletişim kurallarını belirler.
+**Mimari Karar:** "Sıfır Güven (Zero-trust)" yaklaşımı benimsenmiştir. Ingress tarafında yalnızca `5000` portuna izin verilirken, Egress tarafında sadece HTTP (80), HTTPS (443) ve DNS (53) trafiğine izin verilerek potansiyel saldırı yüzeyi daraltılmıştır.
 
-```bash
-# Google Cloud'a giriş
-gcloud auth login
-
-# Proje seçimi
-gcloud config set project YOUR_PROJECT_ID
-
-# GKE cluster oluştur
-gcloud container clusters create techcorp-cluster \
-  --num-nodes=3 \
-  --zone=europe-west1-b \
-  --machine-type=e2-medium
-
-# Cluster'a bağlan
-gcloud container clusters get-credentials techcorp-cluster \
-  --zone=europe-west1-b
-```
-
-### 2. Docker Image Build & Push
-
-```bash
-# Image oluştur
-docker build -t gcr.io/YOUR_PROJECT_ID/techcorp:v1 .
-
-# GCR'a push et
-docker push gcr.io/YOUR_PROJECT_ID/techcorp:v1
-```
-
-### 3. Kubernetes Manifest'lerini Uygula
-
-```bash
-# deployment.yaml içindeki YOUR_PROJECT_ID'yi güncelleyin!
-sed -i 's/YOUR_PROJECT_ID/your-actual-project-id/g' k8s/deployment.yaml
-
-# PV ve PVC oluştur
-kubectl apply -f k8s/pv.yaml
-kubectl apply -f k8s/pvc.yaml
-
-# Deployment ve Service
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-
-# NetworkPolicy
-kubectl apply -f k8s/networkpolicy.yaml
-
-# HPA (Autoscaling)
-kubectl apply -f k8s/hpa.yaml
-```
-
-### 4. Uygulamaya Erişim
-
-```bash
-# External IP'yi al (1-2 dakika bekleyin)
-kubectl get service techcorp-service
-
-# Pod durumlarını kontrol et
-kubectl get pods
-```
+### 2.5. Kalıcı Veri Yönetimi (PV & PVC)
+**Dosya:** `pv.yaml`, `pvc.yaml`
+**Kapsam:** Konteynerlerin yaşam döngüsünden bağımsız, kalıcı depolama alanı sağlar.
+**Mimari Karar:** Uygulama verilerinin Pod'lar yeniden başlatıldığında kaybolmasını önlemek için 1Gi kapasiteli Persistent Volume yapılandırılmış ve `ReadWriteOnce` erişim moduyla `/app/data` dizinine bağlanmıştır.
 
 ---
 
-## 🔁 Rolling Update
+## 🔄 3. CI/CD Süreci ve Otomasyon (Sürekli Entegrasyon ve Dağıtım)
 
-GitHub'a yeni commit push edildiğinde Cloud Build otomatik olarak çalışır ve rolling update yapar. Manuel olarak da yapılabilir:
+CI/CD hattı, Google Cloud Build kullanılarak tam otomatik hale getirilmiştir. 
 
-```bash
-# Yeni image ile update
-kubectl set image deployment/techcorp-deployment \
-  techcorp=gcr.io/YOUR_PROJECT_ID/techcorp:v2
-
-# Update durumunu izle
-kubectl rollout status deployment/techcorp-deployment
-```
+**Pipeline Akış Adımları:**
+1. **Tetikleme (Trigger):** GitHub `main` dalına yeni bir kod push'landığında süreç otomatik başlar.
+2. **Derleme (Build):** `cloudbuild.yaml` devreye girer. Dockerfile ile yeni uygulama derlenir ve anlık commit hash'i ile etiketlenir.
+3. **Kayıt (Push):** Derlenen Docker imajı Google Container Registry'e (GCR) aktarılır.
+4. **Dağıtım (Deploy):** Cloud Build, GKE cluster'ına bağlanır. Yeni imaj sisteme uygulanarak "Rolling Update" başlatılır ve kesintisiz geçiş sağlanır.
 
 ---
 
-## ⏪ Rollback
+## ⚙️ 4. Operasyonel Yönetim ve Felaket Kurtarma (Disaster Recovery)
 
-```bash
-# Bir önceki versiyona geri dön
-kubectl rollout undo deployment/techcorp-deployment
+Hata durumlarında sistemi geriye döndürme (Rollback) senaryolarını da kapsayan operasyonel adımlar:
 
-# Belirli bir revizyona geri dön
-kubectl rollout undo deployment/techcorp-deployment --to-revision=2
+### 4.1. GKE Cluster ve Alt Yapı Kurulumu
+    gcloud auth login
+    gcloud config set project YOUR_PROJECT_ID
 
-# Revizyon geçmişini gör
-kubectl rollout history deployment/techcorp-deployment
-```
+    gcloud container clusters create techcorp-cluster \
+      --num-nodes=3 \
+      --zone=europe-west1-b \
+      --machine-type=e2-medium
 
----
+    gcloud container clusters get-credentials techcorp-cluster --zone=europe-west1-b
 
-## 📈 Scaling
+### 4.2. K8s Obje Dağıtımı (Deployment)
+    sed -i 's/YOUR_PROJECT_ID/your-actual-project-id/g' k8s/deployment.yaml
 
-```bash
-# Manuel scaling — replica sayısını artır
-kubectl scale deployment techcorp-deployment --replicas=5
+    kubectl apply -f k8s/pv.yaml
+    kubectl apply -f k8s/pvc.yaml
+    kubectl apply -f k8s/deployment.yaml
+    kubectl apply -f k8s/service.yaml
+    kubectl apply -f k8s/networkpolicy.yaml
+    kubectl apply -f k8s/hpa.yaml
 
-# HPA durumunu izle (otomatik scaling)
-kubectl get hpa techcorp-hpa
+### 4.3. Versiyon Geri Alma (Rollback) Stratejisi
+    # Dağıtım geçmişini görüntüleme
+    kubectl rollout history deployment/techcorp-deployment
 
-# HPA detayları
-kubectl describe hpa techcorp-hpa
-```
-
-HPA, CPU kullanımı %70'i veya bellek kullanımı %80'i geçtiğinde otomatik olarak pod sayısını 2'den 5'e kadar artırır.
-
----
-
-## 🛡️ NetworkPolicy
-
-`networkpolicy.yaml` ile:
-- **Ingress:** Sadece 5000 numaralı porttan gelen trafiğe izin verilir
-- **Egress:** Sadece HTTP (80), HTTPS (443) ve DNS (53/UDP) çıkışına izin verilir
-- Diğer tüm trafik engellenir
+    # Bir önceki stabil versiyona geri dönme
+    kubectl rollout undo deployment/techcorp-deployment
 
 ---
 
-## 💾 Persistent Volume / PVC
+## 🛠️ 5. Kullanılan Teknoloji Yığını (Tech Stack)
 
-- `pv.yaml`: 1Gi kapasiteli, `ReadWriteOnce` erişim modlu PersistentVolume tanımlar
-- `pvc.yaml`: PV'ye bağlanan PersistentVolumeClaim tanımlar
-- `deployment.yaml`: `/app/data` dizinine PVC mount edilir
-
----
-
-## ⚙️ CI/CD — Cloud Build Kurulumu
-
-1. GitHub reponuzu Google Cloud Source Repositories ile bağlayın
-2. Cloud Build > Triggers > Yeni Trigger oluşturun
-3. Tetikleyici: `main` branch'e push
-4. Config dosyası: `cloudbuild.yaml`
-
-```bash
-# Cloud Build trigger oluştur (gcloud ile)
-gcloud builds triggers create github \
-  --repo-name=corporate-site \
-  --repo-owner=YOUR_GITHUB_USERNAME \
-  --branch-pattern=^main$ \
-  --build-config=cloudbuild.yaml
-```
-
----
-
-## 🛠️ Kullanılan Teknolojiler
-
-| Teknoloji | Versiyon | Kullanım Amacı |
-|---|---|---|
-| Python | 3.11 | Uygulama dili |
-| Flask | 3.0.3 | Web framework |
-| Gunicorn | 22.0.0 | WSGI sunucu |
-| Docker | latest | Containerization |
-| Kubernetes | 1.28+ | Orchestration |
-| GKE | - | Yönetilen K8s |
-| Cloud Build | - | CI/CD pipeline |
-| GCR | - | Container registry |
-
----
-
-## 👥 Grup Bilgileri
-
-- **Ders:** Bulut Bilişim
-- **Sunum Tarihi:** 3 Haziran 2025
-- **Grup Üyeleri:** [İsimlerinizi ekleyin]
+| Kategori | Teknoloji / Araç | Sürüm | Tercih Nedeni |
+| :--- | :--- | :--- | :--- |
+| **Uygulama Dili** | Python | 3.11 | Hızlı geliştirme süreci ve geniş kütüphane desteği |
+| **Web Framework** | Flask & Gunicorn | 3.0.3 / 22.0.0 | Mikroservis mimarisine uygun hafif yapı ve asenkron WSGI desteği |
+| **Konteynerizasyon** | Docker | Latest | İşletim sisteminden bağımsız, taşınabilir (portable) ortam |
+| **Orkestrasyon** | Kubernetes (GKE)| 1.28+ | High Availability, Load Balancing ve Self-healing gereksinimleri |
+| **CI/CD Hattı** | Cloud Build | - | Geliştirme süreçlerini otomatikleştirerek insan hatasını minimize etmek |
+| **İmaj Yönetimi** | GCR | - | Docker imajlarını güvenli ve versiyonlanmış olarak saklamak |
